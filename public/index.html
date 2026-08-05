@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EscolaSync - Agenda Digital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+  
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    
+    <!-- Cabeçalho -->
+    <div class="bg-blue-600 p-6 text-white text-center">
+      <h1 class="text-2xl font-bold tracking-wide">EscolaSync</h1>
+      <p class="text-blue-100 text-sm mt-1">Central de Comunicação e Agenda Digital</p>
+    </div>
+
+    <!-- Formulário -->
+    <form id="notifForm" class="p-6 space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome do Aluno</label>
+        <input type="text" id="aluno" placeholder="Ex: Lucas Silva" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">E-mail dos Responsáveis</label>
+        <input type="email" id="email" placeholder="seu-email@gmail.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Comunicado / Tarefa</label>
+        <textarea id="mensagem" rows="3" placeholder="Digite o aviso escolar aqui..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required></textarea>
+      </div>
+
+      <button type="submit" id="btnEnviar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition flex justify-center items-center">
+        <span>Enviar Notificação</span>
+      </button>
+    </form>
+
+    <!-- Status do Envio -->
+    <div id="status" class="px-6 pb-6 text-center text-sm font-semibold hidden"></div>
+
+  </div>
+
+  <script>
+    document.getElementById('notifForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const statusDiv = document.getElementById('status');
+      const btn = document.getElementById('btnEnviar');
+
+      statusDiv.classList.remove('hidden', 'text-green-600', 'text-red-600');
+      statusDiv.classList.add('text-slate-500');
+      statusDiv.innerText = "Enviando notificação segura...";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('/api/notificar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            aluno: document.getElementById('aluno').value,
+            emailPais: document.getElementById('email').value,
+            mensagem: document.getElementById('mensagem').value
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          statusDiv.classList.remove('text-slate-500');
+          statusDiv.classList.add('text-green-600');
+          statusDiv.innerText = " Notificação entregue com sucesso no e-mail!";
+          document.getElementById('notifForm').reset();
+        } else {
+          throw new Error(result.error || 'Erro no envio');
+        }
+      } catch (err) {
+        statusDiv.classList.remove('text-slate-500');
+        statusDiv.classList.add('text-red-600');
+        statusDiv.innerText = " Falha ao enviar notificação. Verifique as credenciais.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
